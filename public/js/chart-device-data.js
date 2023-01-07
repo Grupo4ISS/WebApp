@@ -85,11 +85,11 @@ $(document).ready(() => {
         fill: false,
         label: 'Lab3',
         yAxisID: 'Lab3',
-        borderColor: 'rgba(24, 120, 240, 1)',
-        pointBoarderColor: 'rgba(24, 120, 240, 1)',
-        backgroundColor: 'rgba(24, 120, 240, 0.4)',
-        pointHoverBackgroundColor: 'rgba(24, 120, 240, 1)',
-        pointHoverBorderColor: 'rgba(24, 120, 240, 1)',
+        borderColor: 'rgba(160,179,113, 1)',
+        pointBoarderColor: 'rgba(160,179,113, 1)',
+        backgroundColor: 'rgba(160,179,113, 0.4)',
+        pointHoverBackgroundColor: 'rgba(160,179,113, 1)',
+        pointHoverBorderColor: 'rgba(160,179,113, 1)',
         spanGaps: true,
       }
     ]
@@ -99,32 +99,35 @@ $(document).ready(() => {
   const chartOptions = {
     scales: {
       yAxes: [{
-        id: 'Lab1',
+        id: 'Lab data',
         type: 'linear',
         scaleLabel: {
-          labelString: 'Lab1Data (unidades)',
+          labelString: 'Lab data value',
           display: true,
         },
         position: 'left',
-      },
+      }
+      /*
+      ,
       {
         id: 'Lab2',
         type: 'linear',
         scaleLabel: {
           labelString: 'Lab2Data (unidades)',
-          display: true,
+          display: false,
         },
-        position: 'right',
+        position: 'left',
       },
       {
         id: 'Lab3',
         type: 'linear',
         scaleLabel: {
           labelString: 'Lab3Data (unidades)',
-          display: true,
+          display: false,
         },
         position: 'left',
       }
+      */
       ]
     }
   };
