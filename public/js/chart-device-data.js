@@ -6,25 +6,28 @@ $(document).ready(() => {
   const protocol = document.location.protocol.startsWith('https') ? 'wss://' : 'ws://';
   const webSocket = new WebSocket(protocol + location.host);
 
-  // A class for holding the last N points of telemetry for a device
+  // A class for holding the last N points of telemetry for a device CAMBIAR
   class DeviceData {
     constructor(deviceId) {
       this.deviceId = deviceId;
       this.maxLen = 50;
       this.timeData = new Array(this.maxLen);
-      this.temperatureData = new Array(this.maxLen);
-      this.humidityData = new Array(this.maxLen);
+      this.lab1Data = new Array(this.maxLen);
+      this.lab2Data = new Array(this.maxLen);
+      this.lab3Data = new Array(this.maxLen);
     }
 
-    addData(time, temperature, humidity) {
+    addData(time, lab1, lab2, lab3) {
       this.timeData.push(time);
-      this.temperatureData.push(temperature);
-      this.humidityData.push(humidity || null);
+      this.lab1Data.push(lab1);
+      this.lab2Data.push(lab2);
+      this.lab3Data.push(lab3);
 
       if (this.timeData.length > this.maxLen) {
         this.timeData.shift();
-        this.temperatureData.shift();
-        this.humidityData.shift();
+        this.lab1Data.shift();
+        this.lab2Data.shift();
+        this.lab3Data.shift();
       }
     }
   }
@@ -53,13 +56,13 @@ $(document).ready(() => {
 
   const trackedDevices = new TrackedDevices();
 
-  // Define the chart axes
+  // Define the chart axes CAMBIAR
   const chartData = {
     datasets: [
       {
         fill: false,
-        label: 'Temperature',
-        yAxisID: 'Temperature',
+        label: 'Lab1',
+        yAxisID: 'Lab1',
         borderColor: 'rgba(255, 204, 0, 1)',
         pointBoarderColor: 'rgba(255, 204, 0, 1)',
         backgroundColor: 'rgba(255, 204, 0, 0.4)',
@@ -69,8 +72,19 @@ $(document).ready(() => {
       },
       {
         fill: false,
-        label: 'Humidity',
-        yAxisID: 'Humidity',
+        label: 'Lab2',
+        yAxisID: 'Lab2',
+        borderColor: 'rgba(24, 120, 240, 1)',
+        pointBoarderColor: 'rgba(24, 120, 240, 1)',
+        backgroundColor: 'rgba(24, 120, 240, 0.4)',
+        pointHoverBackgroundColor: 'rgba(24, 120, 240, 1)',
+        pointHoverBorderColor: 'rgba(24, 120, 240, 1)',
+        spanGaps: true,
+      },
+      {
+        fill: false,
+        label: 'Lab3',
+        yAxisID: 'Lab3',
         borderColor: 'rgba(24, 120, 240, 1)',
         pointBoarderColor: 'rgba(24, 120, 240, 1)',
         backgroundColor: 'rgba(24, 120, 240, 0.4)',
@@ -81,26 +95,37 @@ $(document).ready(() => {
     ]
   };
 
+  //CAMBIAR
   const chartOptions = {
     scales: {
       yAxes: [{
-        id: 'Temperature',
+        id: 'Lab1',
         type: 'linear',
         scaleLabel: {
-          labelString: 'Temperature (ºC)',
+          labelString: 'Lab1Data (unidades)',
           display: true,
         },
         position: 'left',
       },
       {
-        id: 'Humidity',
+        id: 'Lab2',
         type: 'linear',
         scaleLabel: {
-          labelString: 'Humidity (%)',
+          labelString: 'Lab2Data (unidades)',
           display: true,
         },
         position: 'right',
-      }]
+      },
+      {
+        id: 'Lab3',
+        type: 'linear',
+        scaleLabel: {
+          labelString: 'Lab3Data (unidades)',
+          display: true,
+        },
+        position: 'left',
+      }
+      ]
     }
   };
 
@@ -122,8 +147,9 @@ $(document).ready(() => {
   function OnSelectionChange() {
     const device = trackedDevices.findDevice(listOfDevices[listOfDevices.selectedIndex].text);
     chartData.labels = device.timeData;
-    chartData.datasets[0].data = device.temperatureData;
-    chartData.datasets[1].data = device.humidityData;
+    chartData.datasets[0].data = device.lab1Data;
+    chartData.datasets[1].data = device.lab2Data;
+    chartData.datasets[2].data = device.lab3Data;
     myLineChart.update();
   }
   listOfDevices.addEventListener('change', OnSelectionChange, false);
@@ -139,22 +165,54 @@ $(document).ready(() => {
       const messageData = JSON.parse(message.data);
       console.log(messageData);
 
-      // time and either temperature or humidity are required
+      /*
+      // time and either temperature or humidity are required CAMBIAR
       if (!messageData.MessageDate || (!messageData.IotData.temperature && !messageData.IotData.humidity)) {
         return;
       }
+      */
 
       // find or add device to list of tracked devices
       const existingDeviceData = trackedDevices.findDevice(messageData.DeviceId);
 
       if (existingDeviceData) {
-        existingDeviceData.addData(messageData.MessageDate, messageData.IotData.temperature, messageData.IotData.humidity);
+        switch (messageData.DeviceId) {
+          case temperatura:
+            existingDeviceData.addData(messageData.MessageDate, messageData.IotData.temperatureLab1, messageData.IotData.temperatureLab2, messageData.IotData.temperatureLab3);
+            break;
+          case luminosidad:
+            existingDeviceData.addData(messageData.MessageDate, messageData.IotData.lumninosidadLab1, messageData.IotData.lumninosidadLab2, messageData.IotData.lumninosidadLab3);
+            break;
+          case ruido:
+            existingDeviceData.addData(messageData.MessageDate, messageData.IotData.ruidoLab1, messageData.IotData.ruidoLab2, messageData.IotData.ruidoLab3);
+            break;
+          case co2:
+            existingDeviceData.addData(messageData.MessageDate, messageData.IotData.co2Lab1, messageData.IotData.co2Lab2, messageData.IotData.co2Lab3);
+            break;
+          default:
+            break;
+        }
       } else {
         const newDeviceData = new DeviceData(messageData.DeviceId);
         trackedDevices.devices.push(newDeviceData);
         const numDevices = trackedDevices.getDevicesCount();
         deviceCount.innerText = numDevices === 1 ? `${numDevices} device` : `${numDevices} devices`;
-        newDeviceData.addData(messageData.MessageDate, messageData.IotData.temperature, messageData.IotData.humidity);
+        switch (messageData.DeviceId) {
+          case temperatura:
+            existingDeviceData.addData(messageData.MessageDate, messageData.IotData.temperatureLab1, messageData.IotData.temperatureLab2, messageData.IotData.temperatureLab3);
+            break;
+          case luminosidad:
+            existingDeviceData.addData(messageData.MessageDate, messageData.IotData.lumninosidadLab1, messageData.IotData.lumninosidadLab2, messageData.IotData.lumninosidadLab3);
+            break;
+          case ruido:
+            existingDeviceData.addData(messageData.MessageDate, messageData.IotData.ruidoLab1, messageData.IotData.ruidoLab2, messageData.IotData.ruidoLab3);
+            break;
+          case co2:
+            existingDeviceData.addData(messageData.MessageDate, messageData.IotData.co2Lab1, messageData.IotData.co2Lab2, messageData.IotData.co2Lab3);
+            break;
+          default:
+            break;
+        }
 
         // add device to the UI list
         const node = document.createElement('option');
